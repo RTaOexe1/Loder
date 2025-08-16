@@ -6,7 +6,7 @@ if getgenv().RunScript == true then	return end
 getgenv().RunScript = true
 
 local queueScript = string.format([[
-loadstring(game:HttpGet('https://raw.githubusercontent.com/dyumra/Detail/refs/heads/main/Allchest.lua'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/RTaOexe1/Loder/main/AllChest.lua'))()
 ]])
 
 queue_on_teleport(queueScript)
@@ -270,3 +270,4 @@ else
 	wait(0.5)
 	game:GetService("TeleportService"):Teleport(126509999114328)
 end
+
