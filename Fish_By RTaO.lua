@@ -322,48 +322,63 @@ What is "Fish Threshold"? Detects the number of fish you have caught, if it has 
 -------------------------------------------
 
 
-local autofish = false
-local autofish2 = false
-local perfectCast = true
-local customDelay = 1.2
+local autoFishEnabled = false
+local delayTime = 3 -- Delay between fishing attempts
 
-function StartAutoFish()
-    autofish = true
-    task.spawn(function()
-        while autofish do
-            pcall(function()
-                local args = {1}
-                local equipRemote = net:WaitForChild("RE/EquipToolFromHotbar")
-                equipRemote:FireServer(unpack(args))
-                task.wait(0.1)
+local autoFishToggle = AutofarmTab:Toggle({
+    Title = "Auto Fish",
+    Desc = "Automatically fish and instant fishing",
+    Value = false,
+    Callback = function(state)
+        autoFishEnabled = state
 
-                local timestamp = perfectCast and 9999999999 or (tick() + math.random())
-                RodShake:Play()
-                rodRemote:InvokeServer(timestamp)
-                local x, y = -99.238, 99.969
-                if not perfectCast then
-                    x = math.random(-1000, 1000) / 1000
-                    y = math.random(0, 1000) / 1000
+        if state then
+            WindUI:Notify({
+                Title = "Auto Fish",
+                Content = "Enabled",
+                Duration = 3
+            })
+
+            task.spawn(function()
+                while autoFishEnabled do
+                    local success, err = pcall(function()
+                        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                        local EquipRod = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/EquipToolFromHotbar"]
+                        local StartMinigame = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/RequestFishingMinigameStarted"]
+                        local ChargeRod = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/ChargeFishingRod"]
+
+                        -- Auto equip rod (slot 1)
+                        EquipRod:FireServer(1)
+                        task.wait(0.1)
+
+                        -- Start mini game
+                        StartMinigame:InvokeServer(-0.7499996423721313, 1)
+                        task.wait(0.1)
+
+                        -- Charge rod
+                        ChargeRod:InvokeServer(workspace:GetServerTimeNow())
+                        task.wait(0.1)
+
+                        -- Request mini game again to ensure
+                        StartMinigame:InvokeServer(-0.7499996423721313, 1)
+                    end)
+
+                    if not success then
+                        warn("Auto Fish error:", err)
+                    end
+
+                    task.wait(delayTime)
                 end
-                RodIdle:Play()
-                miniGameRemote:InvokeServer(x, y)
-                task.wait(1.2)
-                finishRemote:FireServer()
-                RodReel:Play()
-                RodIdle:Stop()
             end)
-            task.wait(customDelay)
+        else
+            WindUI:Notify({
+                Title = "Auto Fish",
+                Content = "Disabled",
+                Duration = 3
+            })
         end
-    end)
-end
-
-function StopAutoFish()
-    autofish = false
-end
-
-
-
-
+    end
+})
 
 local EquipEvent = net:WaitForChild("RE/EquipItem")
 local SellRemote = net:WaitForChild("RF/SellItem")
